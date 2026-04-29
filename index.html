@@ -69,7 +69,7 @@ function Title({icon,title,sub}) {
 function Pill({color, label}) {
   const cols = {green:C.good,yellow:C.warn,red:C.danger,gold:C.accent};
   const c = cols[color]||C.accent;
-  return <span style={{display:"inline-block",padding:"4px 14px",borderRadius:"20px",background:`${c}22`,color:c,fontSize:"13px",fontWeight:600,border:`1px solid ${c}50`}}>{label}</span>;
+  return <span style={{display:"inline-block",padding:"4px 14px",borderRadius:"20px",background:"rgba(255,215,0,0.15)",color:c,fontSize:"13px",fontWeight:600,border:"1px solid rgba(255,215,0,0.4)"}}>{label}</span>;
 }
 
 // ── TOOL 1: Sleep Calculator ──────────────────────────────────────────────

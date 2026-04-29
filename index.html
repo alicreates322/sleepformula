@@ -1,3 +1,6 @@
+Here's your complete index.html with Google Analytics already added in the correct spot:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,9 +9,16 @@
   <title>SleepFormula — Free Sleep Health Tools</title>
   <meta name="description" content="Free science-backed sleep tools. Sleep calculator, chronotype quiz, sleep debt tracker, caffeine cutoff calculator and more." />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XYTDRLJN3H"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XYTDRLJN3H');
+  </script>
+  
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -434,7 +444,6 @@
       );
     }
 
-    // FIXED: Using ReactDOM.render instead of createRoot for compatibility
     ReactDOM.render(<App/>, document.getElementById("root"));
   </script>
 </body>

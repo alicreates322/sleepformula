@@ -1,206 +1,435 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SleepFormula — Free Sleep Health Tools</title>
   <meta name="description" content="Free science-backed sleep tools. Sleep calculator, chronotype quiz, sleep debt tracker, caffeine cutoff calculator and more." />
-
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: #000;
-      color: #FFD700;
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-    }
-
-    button {
-      font-family: inherit;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #333300;
-      background: #111;
-      color: #FFD700;
-      font-size: 14px;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: #FFD700;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: #000000; color: #FFD700; font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.6; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #000000; }
+    ::-webkit-scrollbar-thumb { background: #996600; border-radius: 3px; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.3); } 50% { box-shadow: 0 0 0 10px rgba(255,215,0,0); } }
+    @keyframes starTwinkle { 0%,100%{opacity:0.3} 50%{opacity:1} }
+    .fade-up { animation: fadeUp 0.5s ease forwards; }
+    input[type=range] { -webkit-appearance:none; width:100%; height:4px; background:#333300; border-radius:2px; outline:none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#FFD700; cursor:pointer; box-shadow:0 0 8px rgba(255,215,0,0.5); }
+    input[type=time], input[type=number] { background:#111111; border:1px solid #333300; color:#FFD700; padding:10px 14px; border-radius:8px; font-size:15px; font-family:'DM Sans',sans-serif; outline:none; width:100%; }
+    input[type=time]:focus, input[type=number]:focus { border-color:#FFD700; }
+    select { background:#111111; border:1px solid #333300; color:#FFD700; padding:10px 14px; border-radius:8px; font-size:15px; font-family:'DM Sans',sans-serif; outline:none; width:100%; cursor:pointer; }
+    select:focus { border-color:#FFD700; }
+    button { font-family:'DM Sans',sans-serif; }
   </style>
 </head>
 <body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
 
-<div id="root"></div>
-
-<script type="text/babel">
-const { useState } = React;
-
+```
 const C = {
-  bg: "#000000",
-  surface: "#111111",
-  border: "#333300",
-  accent: "#FFD700",
-  accentDim: "#996600",
-  accentSoft: "rgba(255,215,0,0.12)",
-  text: "#FFD700",
-  muted: "#CCAA00",
-  danger: "#f27d6a",
-  warn: "#f5a623",
-  good: "#a8e063"
+  bg:"#000000", surface:"#111111", border:"#333300",
+  accent:"#FFD700", accentDim:"#996600", accentSoft:"rgba(255,215,0,0.12)",
+  text:"#FFD700", muted:"#CCAA00", danger:"#f27d6a", warn:"#f5a623", good:"#a8e063"
 };
 
-function Btn({ children, onClick, style = {} }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        padding: "12px 22px",
-        border: "none",
-        borderRadius: "8px",
-        background: C.accent,
-        color: C.bg,
-        fontWeight: 600,
-        cursor: "pointer",
-        ...style
-      }}
-    >
-      {children}
-    </button>
-  );
+const TOOLS = ["🌙 Sleep Calc","📊 Sleep Debt","🦁 Chronotype","⭐ Sleep Score","☕ Caffeine"];
+
+function Btn({children, onClick, style={}}) {
+  return <button onClick={onClick} style={{padding:"11px 24px",borderRadius:"8px",border:"none",background:C.accent,color:C.bg,fontSize:"14px",fontWeight:600,cursor:"pointer",transition:"all 0.2s",display:"inline-flex",alignItems:"center",gap:"8px",...style}}>{children}</button>;
 }
 
-function Card({ children, style = {} }) {
+function Card({children, style={}}) {
+  return <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:"16px",padding:"24px",...style}}>{children}</div>;
+}
+
+function Label({children}) {
+  return <div style={{fontSize:"12px",fontWeight:600,letterSpacing:"0.08em",color:C.muted,textTransform:"uppercase",marginBottom:"8px"}}>{children}</div>;
+}
+
+function Title({icon,title,sub}) {
   return (
-    <div
-      style={{
-        background: C.surface,
-        border: `1px solid ${C.border}`,
-        borderRadius: "16px",
-        padding: "24px",
-        ...style
-      }}
-    >
-      {children}
+    <div style={{marginBottom:"28px"}}>
+      <div style={{fontSize:"28px",marginBottom:"8px"}}>{icon}</div>
+      <h2 style={{fontFamily:"'DM Serif Display',serif",fontSize:"clamp(22px,4vw,30px)",color:C.text,marginBottom:"6px"}}>{title}</h2>
+      <p style={{color:C.muted,fontSize:"14px",maxWidth:"480px"}}>{sub}</p>
     </div>
   );
 }
 
-function App() {
-  const [time, setTime] = useState("07:00");
-  const [results, setResults] = useState([]);
+function Pill({color, label}) {
+  const cols = {green:C.good,yellow:C.warn,red:C.danger,gold:C.accent};
+  const c = cols[color]||C.accent;
+  return <span style={{display:"inline-block",padding:"4px 14px",borderRadius:"20px",background:"rgba(255,215,0,0.15)",color:c,fontSize:"13px",fontWeight:600,border:"1px solid rgba(255,215,0,0.4)"}}>{label}</span>;
+}
 
-  function calculateSleepTimes() {
-    const [h, m] = time.split(":").map(Number);
-    const base = h * 60 + m;
-    const cycle = 90;
-    const output = [];
+// ── TOOL 1: Sleep Calculator ──────────────────────────────────────────────
+function SleepCalculator() {
+  const [mode,setMode]=useState("wakeup");
+  const [time,setTime]=useState("07:00");
+  const [results,setResults]=useState(null);
+  const CYCLE=90;
 
-    for (let c = 6; c >= 3; c--) {
-      let t = base - (c * cycle) - 15;
-
-      if (t < 0) t += 1440;
-
-      const th = Math.floor(t / 60) % 24;
-      const tm = t % 60;
-
-      output.push(
-        `${String(th).padStart(2, "0")}:${String(tm).padStart(2, "0")}`
-      );
+  function calc() {
+    const [h,m]=time.split(":").map(Number);
+    const base=h*60+m;
+    const times=[];
+    for(let c=6;c>=3;c--) {
+      let t = mode==="wakeup" ? base-c*CYCLE-15 : base+c*CYCLE+15;
+      if(t<0)t+=1440; if(t>=1440)t-=1440;
+      const th=Math.floor(t/60)%24,tm=t%60;
+      times.push({label:`${String(th).padStart(2,"0")}:${String(tm).padStart(2,"0")}`,cycles:c,hours:(c*CYCLE/60).toFixed(1),q:c>=5?"Excellent":c===4?"Good":"Minimum"});
     }
-
-    setResults(output);
+    setResults(times);
   }
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "40px 20px" }}>
-      <h1
-        style={{
-          fontFamily: "'DM Serif Display', serif",
-          fontSize: "48px",
-          marginBottom: "12px"
-        }}
-      >
-        SleepFormula 🌙
-      </h1>
-
-      <p style={{ color: C.muted, marginBottom: "32px" }}>
-        Free science-backed sleep tools to improve your sleep.
-      </p>
-
-      <Card style={{ marginBottom: "20px" }}>
-        <h2 style={{ marginBottom: "16px" }}>Sleep Cycle Calculator</h2>
-
-        <label style={{ display: "block", marginBottom: "10px" }}>
-          Wake-up Time
-        </label>
-
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
-
-        <Btn
-          onClick={calculateSleepTimes}
-          style={{
-            marginTop: "16px",
-            width: "100%"
-          }}
-        >
-          Calculate Sleep Times
-        </Btn>
+    <div className="fade-up">
+      <Title icon="🌙" title="Sleep Cycle Calculator" sub="Based on 90-minute sleep cycles. Wake up refreshed by timing your alarm to the end of a cycle." />
+      <div style={{display:"flex",gap:"8px",marginBottom:"20px",flexWrap:"wrap"}}>
+        {["wakeup","bedtime"].map(m=>(
+          <button key={m} onClick={()=>{setMode(m);setResults(null);}} style={{padding:"9px 18px",borderRadius:"8px",border:`1px solid ${mode===m?C.accent:C.border}`,background:mode===m?C.accentSoft:"transparent",color:mode===m?C.accent:C.muted,cursor:"pointer",fontSize:"14px",fontWeight:500}}>
+            {m==="wakeup"?"Wake up at…":"Go to bed at…"}
+          </button>
+        ))}
+      </div>
+      <Card style={{maxWidth:"400px",marginBottom:"16px"}}>
+        <Label>{mode==="wakeup"?"Wake-up Time":"Bedtime"}</Label>
+        <input type="time" value={time} onChange={e=>setTime(e.target.value)} />
+        <Btn onClick={calc} style={{marginTop:"14px",width:"100%",justifyContent:"center"}}>Calculate Sleep Times</Btn>
       </Card>
-
-      {results.length > 0 && (
-        <Card>
-          <h3 style={{ marginBottom: "16px" }}>
-            Best times to go to bed:
-          </h3>
-
-          <div style={{ display: "grid", gap: "12px" }}>
-            {results.map((r, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "14px",
-                  border: `1px solid ${C.border}`,
-                  borderRadius: "10px",
-                  fontSize: "24px",
-                  fontFamily: "'DM Serif Display', serif"
-                }}
-              >
-                {r}
-              </div>
+      {results && (
+        <div className="fade-up">
+          <p style={{color:C.muted,fontSize:"13px",marginBottom:"12px"}}>{mode==="wakeup"?`Go to bed at:`:`Wake up at:`}</p>
+          <div style={{display:"grid",gap:"8px"}}>
+            {results.map((r,i)=>(
+              <Card key={i} style={{padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:"8px"}}>
+                <span style={{fontFamily:"'DM Serif Display',serif",fontSize:"28px",color:C.accent}}>{r.label}</span>
+                <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                  <span style={{color:C.muted,fontSize:"13px"}}>{r.cycles} cycles · {r.hours}h</span>
+                  <Pill color={r.q==="Excellent"?"green":r.q==="Good"?"gold":"yellow"} label={r.q} />
+                </div>
+              </Card>
             ))}
           </div>
-        </Card>
+          <Card style={{marginTop:"12px",background:C.accentSoft,borderColor:C.accentDim}}>
+            <p style={{fontSize:"13px",color:C.muted}}>💡 <strong style={{color:C.text}}>Tip:</strong> Add 15 minutes for time to fall asleep. Most adults complete a cycle every 90 minutes.</p>
+          </Card>
+        </div>
       )}
     </div>
   );
 }
 
-ReactDOM.createRoot(
-  document.getElementById("root")
-).render(<App />);
-</script>
+// ── TOOL 2: Sleep Debt ────────────────────────────────────────────────────
+function SleepDebt() {
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const [hrs,setHrs]=useState({Mon:7,Tue:6,Wed:6.5,Thu:7,Fri:5.5,Sat:8,Sun:7.5});
+  const [goal,setGoal]=useState(8);
+  const [res,setRes]=useState(null);
 
+  function calc() {
+    const total=Object.values(hrs).reduce((a,b)=>a+parseFloat(b||0),0);
+    const debt=goal*7-total;
+    setRes({debt,total,avg:(total/7).toFixed(1)});
+  }
+
+  return (
+    <div className="fade-up">
+      <Title icon="📊" title="Sleep Debt Tracker" sub="Track how much sleep you've accumulated or lost this week." />
+      <Card style={{marginBottom:"14px"}}>
+        <Label>Sleep Goal (hours/night)</Label>
+        <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
+          <input type="range" min="6" max="10" step="0.5" value={goal} onChange={e=>setGoal(parseFloat(e.target.value))} style={{flex:1}} />
+          <span style={{fontFamily:"'DM Serif Display',serif",fontSize:"28px",color:C.accent,minWidth:"45px"}}>{goal}h</span>
+        </div>
+      </Card>
+      <Card style={{marginBottom:"14px"}}>
+        <Label>Hours Slept Each Night</Label>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"6px",marginTop:"8px"}}>
+          {days.map(d=>(
+            <div key={d} style={{textAlign:"center"}}>
+              <div style={{fontSize:"11px",color:C.muted,marginBottom:"4px",fontWeight:600}}>{d}</div>
+              <input type="number" min="0" max="12" step="0.5" value={hrs[d]} onChange={e=>setHrs(h=>({...h,[d]:parseFloat(e.target.value)||0}))} style={{textAlign:"center",padding:"8px 2px"}} />
+            </div>
+          ))}
+        </div>
+        <Btn onClick={calc} style={{marginTop:"16px",width:"100%",justifyContent:"center"}}>Calculate Sleep Debt</Btn>
+      </Card>
+      {res && (
+        <div className="fade-up" style={{display:"grid",gap:"10px",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))"}}>
+          <Card style={{textAlign:"center",background:C.accentSoft}}>
+            <div style={{fontSize:"11px",color:C.muted,fontWeight:600,textTransform:"uppercase",marginBottom:"6px"}}>Avg/night</div>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"40px",color:C.accent}}>{res.avg}h</div>
+          </Card>
+          <Card style={{textAlign:"center"}}>
+            <div style={{fontSize:"11px",color:C.muted,fontWeight:600,textTransform:"uppercase",marginBottom:"6px"}}>Total slept</div>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"40px",color:C.text}}>{res.total.toFixed(1)}h</div>
+          </Card>
+          <Card style={{textAlign:"center"}}>
+            <div style={{fontSize:"11px",color:C.muted,fontWeight:600,textTransform:"uppercase",marginBottom:"6px"}}>{res.debt>0?"Sleep Debt":"Surplus"}</div>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"40px",color:res.debt>0?C.danger:C.good}}>{Math.abs(res.debt).toFixed(1)}h</div>
+            <Pill color={res.debt<=0?"green":res.debt<=5?"yellow":"red"} label={res.debt<=0?"On Track":res.debt<=5?"Moderate":"High Debt"} />
+          </Card>
+          <Card style={{gridColumn:"1/-1"}}>
+            <p style={{fontSize:"13px",color:C.muted,lineHeight:"1.7"}}>
+              {res.debt<=0?"✅ Great work! You're meeting your sleep goal this week.":res.debt<=5?"⚠️ Moderate sleep debt. Try going to bed 30–45 min earlier for a few nights.":"🚨 High sleep debt detected. This impacts memory, immunity, and mood. Prioritise sleep this weekend."}
+            </p>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── TOOL 3: Chronotype Quiz ───────────────────────────────────────────────
+function ChronotypeQuiz() {
+  const qs=[
+    {q:"What time would you naturally wake up without an alarm?",o:["Before 6am","6–7am","7–8:30am","8:30–10am","After 10am"],s:[0,1,2,3,4]},
+    {q:"When do you feel most alert and focused?",o:["5–9am","9am–12pm","12–3pm","3–7pm","After 7pm"],s:[0,1,2,3,4]},
+    {q:"Best time for an important exam?",o:["7–8am","9am","11am","3pm","7pm"],s:[0,0,1,2,4]},
+    {q:"When do you get tired in the evening?",o:["Before 9pm","9–10pm","10–11pm","11pm–1am","After 1am"],s:[0,1,2,3,4]},
+    {q:"How easy is it to wake up early?",o:["Very easy","Easy","Moderate","Hard","Very hard"],s:[0,1,2,3,4]},
+  ];
+  const [ans,setAns]=useState(Array(qs.length).fill(null));
+  const [res,setRes]=useState(null);
+
+  const types={
+    lion:{e:"🦁",n:"Lion — Early Bird",c:"#f5a623",d:"You're most productive in the morning. Leaders often fall into this type.",p:"6am–12pm",tips:["Schedule deep work in mornings","Wind down by 9pm","Avoid late events on weekdays"]},
+    bear:{e:"🐻",n:"Bear — Solar Rhythm",c:C.accent,d:"Your rhythm follows the solar cycle. The most common type (~55% of people).",p:"9am–2pm",tips:["Best meetings mid-morning","Use post-lunch dip for admin","Aim for 10:30–11pm bedtime"]},
+    wolf:{e:"🐺",n:"Wolf — Night Owl",c:"#a78bfa",d:"You come alive at night. Creative work flows late. Society's 9–5 is your nemesis.",p:"5pm–12am",tips:["Protect your mornings","Use afternoons for collaboration","Consider a later work schedule"]},
+    dolphin:{e:"🐬",n:"Dolphin — Light Sleeper",c:C.danger,d:"Irregular patterns, light sleeping. Intelligent, driven perfectionists.",p:"Variable",tips:["Strict consistent sleep times","Avoid clock-watching at night","Limit screens 1hr before bed"]},
+  };
+
+  function calc() {
+    if(ans.some(a=>a===null))return;
+    const total=ans.reduce((s,a,i)=>s+qs[i].s[a],0);
+    setRes(total<=4?"lion":total<=9?"bear":total<=13?"wolf":"dolphin");
+  }
+
+  return (
+    <div className="fade-up">
+      <Title icon="🦁" title="Chronotype Quiz" sub="Discover your biological clock type — Lion, Bear, Wolf, or Dolphin." />
+      <div style={{display:"grid",gap:"12px",marginBottom:"16px"}}>
+        {qs.map((q,qi)=>(
+          <Card key={qi}>
+            <p style={{fontWeight:500,marginBottom:"10px",fontSize:"14px"}}><span style={{color:C.accent,fontWeight:700}}>Q{qi+1}.</span> {q.q}</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
+              {q.o.map((o,oi)=>(
+                <button key={oi} onClick={()=>{const a=[...ans];a[qi]=oi;setAns(a);}} style={{padding:"6px 14px",borderRadius:"20px",border:`1px solid ${ans[qi]===oi?C.accent:C.border}`,background:ans[qi]===oi?C.accentSoft:"transparent",color:ans[qi]===oi?C.accent:C.muted,fontSize:"13px",cursor:"pointer",transition:"all 0.15s"}}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+      <Btn onClick={calc} style={{width:"100%",justifyContent:"center",opacity:ans.some(a=>a===null)?0.5:1}}>Reveal My Chronotype</Btn>
+      {res && (
+        <div className="fade-up" style={{marginTop:"16px"}}>
+          <Card style={{borderColor:types[res].c,background:`${types[res].c}12`}}>
+            <div style={{fontSize:"48px",marginBottom:"8px"}}>{types[res].e}</div>
+            <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:"24px",color:types[res].c,marginBottom:"8px"}}>{types[res].n}</h3>
+            <p style={{color:C.muted,fontSize:"14px",lineHeight:"1.7",marginBottom:"14px"}}>{types[res].d}</p>
+            <div style={{marginBottom:"10px"}}><Label>Peak Hours</Label><Pill color="gold" label={types[res].p} /></div>
+            <Label>Your Tips</Label>
+            {types[res].tips.map((t,i)=><div key={i} style={{color:C.muted,fontSize:"14px",marginBottom:"4px"}}><span style={{color:types[res].c}}>→ </span>{t}</div>)}
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── TOOL 4: Sleep Score ───────────────────────────────────────────────────
+function SleepScore() {
+  const qs=[
+    {q:"How long to fall asleep?",o:["<10 min","10–20 min","20–30 min","30–60 min",">60 min"],s:[10,8,5,2,0]},
+    {q:"How often do you wake up at night?",o:["Never","Once","2–3 times","4–5 times","5+ times"],s:[10,8,5,2,0]},
+    {q:"How refreshed when you wake up?",o:["Very refreshed","Fairly refreshed","Neutral","Tired","Exhausted"],s:[10,7,5,2,0]},
+    {q:"How consistent is your sleep schedule?",o:["Same daily","Mostly consistent","Varies 1–2h","Varies 2–4h","No pattern"],s:[10,8,5,2,0]},
+    {q:"Do you use screens before bed?",o:["Never","Rarely","Sometimes","Often","Always"],s:[10,8,5,2,0]},
+    {q:"Caffeine after 2pm?",o:["Never","Rarely","1–2x/week","3–5x/week","Daily"],s:[10,8,5,2,0]},
+    {q:"How dark and quiet is your bedroom?",o:["Completely","Mostly","Some light/noise","Light & noisy","Very bright/loud"],s:[10,8,5,2,0]},
+  ];
+  const [ans,setAns]=useState(Array(qs.length).fill(null));
+  const [res,setRes]=useState(null);
+
+  function calc() {
+    if(ans.some(a=>a===null))return;
+    const score=ans.reduce((s,a,i)=>s+qs[i].s[a],0);
+    setRes(Math.round((score/70)*100));
+  }
+
+  const info = res!=null ? (res>=80?{l:"Excellent",c:"green",d:"Your sleep hygiene is outstanding. Keep it up!"}:res>=60?{l:"Good",c:"gold",d:"Good sleep with room to improve."}:res>=40?{l:"Fair",c:"yellow",d:"Several factors are hurting your sleep. Small changes help a lot."}:{l:"Poor",c:"red",d:"Your sleep needs serious attention. Consider a sleep specialist."}) : null;
+
+  return (
+    <div className="fade-up">
+      <Title icon="⭐" title="Sleep Quality Score" sub="Answer 7 questions and get a personalised sleep score out of 100." />
+      <div style={{display:"grid",gap:"12px",marginBottom:"16px"}}>
+        {qs.map((q,qi)=>(
+          <Card key={qi} style={{padding:"18px 22px"}}>
+            <p style={{fontWeight:500,marginBottom:"10px",fontSize:"14px"}}><span style={{color:C.accent,fontWeight:700}}>Q{qi+1}.</span> {q.q}</p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
+              {q.o.map((o,oi)=>(
+                <button key={oi} onClick={()=>{const a=[...ans];a[qi]=oi;setAns(a);}} style={{padding:"6px 14px",borderRadius:"20px",border:`1px solid ${ans[qi]===oi?C.accent:C.border}`,background:ans[qi]===oi?C.accentSoft:"transparent",color:ans[qi]===oi?C.accent:C.muted,fontSize:"13px",cursor:"pointer"}}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+      <Btn onClick={calc} style={{width:"100%",justifyContent:"center",opacity:ans.some(a=>a===null)?0.5:1}}>Calculate My Sleep Score</Btn>
+      {res!=null && info && (
+        <div className="fade-up" style={{marginTop:"16px",display:"grid",gap:"10px"}}>
+          <Card style={{textAlign:"center",background:C.accentSoft}}>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"72px",color:C.accent,lineHeight:1}}>{res}</div>
+            <div style={{color:C.muted,fontSize:"13px",marginBottom:"10px"}}>out of 100</div>
+            <Pill color={info.c} label={info.l} />
+            <p style={{marginTop:"14px",color:C.muted,fontSize:"14px"}}>{info.d}</p>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── TOOL 5: Caffeine Cutoff ───────────────────────────────────────────────
+function CaffeineCutoff() {
+  const [bed,setBed]=useState("23:00");
+  const [sens,setSens]=useState("average");
+  const [last,setLast]=useState("14:00");
+  const [res,setRes]=useState(null);
+  const HL={low:4,average:5.5,high:7};
+
+  function calc() {
+    const [bh,bm]=bed.split(":").map(Number);
+    const bedM=bh*60+bm;
+    const hl=HL[sens];
+    let cutM=bedM-Math.round(hl*2*60);
+    if(cutM<0)cutM+=1440;
+    const ch=Math.floor(cutM/60)%24,cm=cutM%60;
+    const cutStr=`${String(ch).padStart(2,"0")}:${String(cm).padStart(2,"0")}`;
+    const [lh,lm]=last.split(":").map(Number);
+    const lastM=lh*60+lm;
+    const ok=lastM<=cutM;
+    setRes({cutStr,ok,hl});
+  }
+
+  return (
+    <div className="fade-up">
+      <Title icon="☕" title="Caffeine Cutoff Calculator" sub="Caffeine has a 5–7 hour half-life. Find out exactly when to stop drinking coffee." />
+      <div style={{display:"grid",gap:"14px",maxWidth:"480px",marginBottom:"16px"}}>
+        <Card><Label>Target Bedtime</Label><input type="time" value={bed} onChange={e=>setBed(e.target.value)} /></Card>
+        <Card>
+          <Label>Your Caffeine Sensitivity</Label>
+          <select value={sens} onChange={e=>setSens(e.target.value)}>
+            <option value="low">Low — fast metabolizer</option>
+            <option value="average">Average sensitivity</option>
+            <option value="high">High — slow metabolizer</option>
+          </select>
+        </Card>
+        <Card><Label>Last Coffee/Tea Today</Label><input type="time" value={last} onChange={e=>setLast(e.target.value)} /></Card>
+        <Btn onClick={calc} style={{width:"100%",justifyContent:"center"}}>Calculate My Cutoff</Btn>
+      </div>
+      {res && (
+        <div className="fade-up" style={{display:"grid",gap:"10px"}}>
+          <Card style={{background:C.accentSoft,textAlign:"center"}}>
+            <Label>Stop Caffeine By</Label>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"64px",color:C.accent,lineHeight:1}}>{res.cutStr}</div>
+            <p style={{color:C.muted,fontSize:"13px",marginTop:"6px"}}>to fall asleep at {bed}</p>
+          </Card>
+          <Card style={{borderLeft:`3px solid ${res.ok?C.good:C.danger}`}}>
+            <p style={{fontSize:"14px",color:C.muted}}>
+              {res.ok?`✅ Your last cup was before your cutoff. You should sleep fine at ${bed}.`:`⚠️ Your last cup was after your cutoff. You may struggle to fall asleep at ${bed}.`}
+            </p>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────
+function App() {
+  const [active,setActive]=useState(0);
+  const tools=[<SleepCalculator/>,<SleepDebt/>,<ChronotypeQuiz/>,<SleepScore/>,<CaffeineCutoff/>];
+
+  return (
+    <div style={{background:"#000000",minHeight:"100vh",color:"#FFD700"}}>
+      {/* Stars */}
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,overflow:"hidden"}}>
+        {Array.from({length:35},(_,i)=>(
+          <div key={i} style={{position:"absolute",left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,width:Math.random()*2+0.5,height:Math.random()*2+0.5,borderRadius:"50%",background:"#FFD700",opacity:0.3,animation:`starTwinkle ${Math.random()*4+2}s ease-in-out infinite`,animationDelay:`${Math.random()*4}s`}}/>
+        ))}
+      </div>
+
+      {/* Header */}
+      <header style={{position:"sticky",top:0,zIndex:10,background:"rgba(0,0,0,0.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid #333300",padding:"0 clamp(16px,5vw,60px)"}}>
+        <div style={{maxWidth:"960px",margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:"64px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
+            <div style={{width:32,height:32,borderRadius:"8px",background:"linear-gradient(135deg,#FFD700,#996600)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px"}}>🌙</div>
+            <div>
+              <div style={{fontFamily:"'DM Serif Display',serif",fontSize:"18px",color:"#FFD700",lineHeight:1}}>SleepFormula</div>
+              <div style={{fontSize:"10px",color:"#CCAA00",letterSpacing:"0.1em",textTransform:"uppercase"}}>Sleep Health Tools</div>
+            </div>
+          </div>
+          <div style={{fontSize:"12px",color:"#CCAA00",display:"flex",alignItems:"center",gap:"6px"}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:C.good,display:"inline-block",animation:"pulse 2s infinite"}}></span>
+            5 Free Tools
+          </div>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <div style={{position:"relative",zIndex:1,padding:"clamp(40px,8vw,80px) clamp(16px,5vw,60px) 32px",textAlign:"center",background:"radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,215,0,0.08), transparent)"}}>
+        <p style={{fontSize:"12px",letterSpacing:"0.15em",textTransform:"uppercase",color:C.accent,fontWeight:600,marginBottom:"14px"}}>Science-Based Sleep Tools</p>
+        <h1 style={{fontFamily:"'DM Serif Display',serif",fontSize:"clamp(32px,6vw,56px)",color:"#FFD700",lineHeight:1.15,marginBottom:"14px"}}>
+          Sleep Better.<br/><em style={{color:C.accent}}>Live Better.</em>
+        </h1>
+        <p style={{color:"#CCAA00",fontSize:"15px",maxWidth:"420px",margin:"0 auto"}}>Free science-backed tools to understand, track, and optimise your sleep — no sign-up required.</p>
+      </div>
+
+      {/* Tool Nav */}
+      <div style={{position:"relative",zIndex:1,borderBottom:"1px solid #333300",overflowX:"auto"}}>
+        <div style={{maxWidth:"960px",margin:"0 auto",display:"flex",gap:"2px",padding:"0 clamp(16px,5vw,60px)"}}>
+          {TOOLS.map((t,i)=>(
+            <button key={i} onClick={()=>setActive(i)} style={{padding:"14px 16px",border:"none",background:"transparent",color:active===i?C.accent:C.muted,fontSize:"13px",fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",borderBottom:`2px solid ${active===i?C.accent:"transparent"}`,transition:"all 0.2s"}}>
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <main style={{position:"relative",zIndex:1,padding:"clamp(24px,5vw,48px) clamp(16px,5vw,60px)"}}>
+        <div style={{maxWidth:"760px",margin:"0 auto"}} key={active}>
+          {tools[active]}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer style={{position:"relative",zIndex:1,borderTop:"1px solid #333300",padding:"28px clamp(16px,5vw,60px)",textAlign:"center",color:"#CCAA00",fontSize:"13px"}}>
+        <p style={{marginBottom:"6px"}}><strong style={{color:"#FFD700",fontFamily:"'DM Serif Display',serif"}}>SleepFormula</strong> — Free sleep health tools. Not medical advice.</p>
+        <p style={{color:"#555500"}}>© 2026 SleepFormula · All tools are free to use</p>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+```
+
+  </script>
 </body>
 </html>
